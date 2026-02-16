@@ -1,0 +1,2509 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WOW Sir's Cambridge Pseudocode Interpreter - 0478/2210/9618</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f5f5;
+            min-height: 100vh;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px 30px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            font-size: 1.8em;
+            margin-bottom: 5px;
+        }
+
+        .header p {
+            font-size: 0.95em;
+            opacity: 0.9;
+        }
+
+        .toolbar {
+            background: white;
+            padding: 10px 20px;
+            border-bottom: 1px solid #e0e0e0;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .toolbar button {
+            padding: 8px 16px;
+            border: 1px solid #ddd;
+            background: white;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: all 0.2s;
+        }
+
+        .toolbar button:hover {
+            background: #f5f5f5;
+            border-color: #667eea;
+        }
+
+        .toolbar button.primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+        }
+
+        .toolbar button.primary:hover {
+            opacity: 0.9;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .cell {
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            overflow: hidden;
+            transition: all 0.2s;
+            position: relative;
+        }
+
+        .cell:hover {
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .cell.focused {
+            border-color: #667eea;
+            box-shadow: 0 2px 12px rgba(102, 126, 234, 0.2);
+        }
+
+        .cell-toolbar {
+            display: flex;
+            align-items: center;
+            padding: 8px 12px;
+            background: #fafafa;
+            border-bottom: 1px solid #e0e0e0;
+            gap: 8px;
+        }
+
+        .cell-type {
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 0.75em;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .cell-type.code {
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+
+        .cell-type.text {
+            background: #f3e5f5;
+            color: #7b1fa2;
+        }
+
+        .cell-actions {
+            margin-left: auto;
+            display: flex;
+            gap: 5px;
+        }
+
+        .cell-actions button {
+            padding: 4px 8px;
+            border: 1px solid #ddd;
+            background: white;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 0.8em;
+        }
+
+        .cell-actions button:hover {
+            background: #f5f5f5;
+        }
+
+        .cell-content {
+            display: flex;
+        }
+
+        .line-numbers {
+            padding: 12px 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            line-height: 1.5;
+            color: #999;
+            background: #f8f8f8;
+            user-select: none;
+            text-align: right;
+            min-width: 45px;
+            border-right: 1px solid #e0e0e0;
+            white-space: pre;
+            overflow: hidden;
+        }
+
+        .cell-input {
+            flex: 1;
+            position: relative;
+        }
+
+        textarea.code-input {
+            width: 100%;
+            min-height: 80px;
+            padding: 12px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            line-height: 1.5;
+            border: none;
+            resize: vertical;
+            outline: none;
+            background: transparent;
+        }
+
+        textarea.text-input {
+            width: 100%;
+            min-height: 60px;
+            padding: 12px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-size: 14px;
+            line-height: 1.6;
+            border: none;
+            resize: vertical;
+            outline: none;
+        }
+
+        .cell-output {
+            border-top: 1px solid #e0e0e0;
+            background: #fafafa;
+            padding: 12px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            display: none;
+        }
+
+        .cell-output.visible {
+            display: block;
+        }
+
+        .output-line {
+            margin: 2px 0;
+        }
+
+        .output-line.success {
+            color: #2e7d32;
+        }
+
+        .output-line.error {
+            color: #c62828;
+        }
+
+        .output-line.info {
+            color: #1565c0;
+        }
+
+        .text-rendered {
+            padding: 12px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-size: 14px;
+            line-height: 1.6;
+            display: none;
+        }
+
+        .text-rendered.visible {
+            display: block;
+        }
+
+        .text-rendered h1 {
+            font-size: 1.8em;
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        .text-rendered h2 {
+            font-size: 1.5em;
+            margin-bottom: 8px;
+            color: #444;
+        }
+
+        .text-rendered h3 {
+            font-size: 1.2em;
+            margin-bottom: 8px;
+            color: #555;
+        }
+
+        .text-rendered p {
+            margin-bottom: 10px;
+        }
+
+        .text-rendered code {
+            background: #f5f5f5;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+        }
+
+        .run-indicator {
+            position: absolute;
+            left: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 0.9em;
+            color: #999;
+        }
+
+        .run-indicator.running {
+            color: #667eea;
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .shortcut-hint {
+            font-size: 0.75em;
+            color: #999;
+            margin-left: 10px;
+        }
+
+        .add-cell-button {
+            text-align: center;
+            padding: 10px;
+        }
+
+        .add-cell-button button {
+            padding: 8px 20px;
+            background: white;
+            border: 1px dashed #ccc;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9em;
+            color: #666;
+        }
+
+        .add-cell-button button:hover {
+            border-color: #667eea;
+            color: #667eea;
+        }
+
+        .help-panel {
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .help-panel h2 {
+            color: #667eea;
+            margin-bottom: 15px;
+        }
+
+        .help-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .help-item {
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 4px;
+        }
+
+        .help-item h3 {
+            font-size: 0.9em;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .help-item code {
+            background: #e3f2fd;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 0.85em;
+        }
+
+        .keyboard-shortcuts {
+            background: #fffde7;
+            padding: 15px;
+            border-radius: 6px;
+            margin-top: 15px;
+            border-left: 4px solid #fbc02d;
+        }
+
+        .keyboard-shortcuts h3 {
+            color: #f57f17;
+            margin-bottom: 10px;
+        }
+
+        .keyboard-shortcuts ul {
+            list-style: none;
+        }
+
+        .keyboard-shortcuts li {
+            padding: 5px 0;
+            font-size: 0.9em;
+        }
+
+        .keyboard-shortcuts kbd {
+            background: #333;
+            color: white;
+            padding: 3px 8px;
+            border-radius: 3px;
+            font-family: monospace;
+            font-size: 0.85em;
+            margin: 0 2px;
+        }
+
+        .footer {
+            background: white;
+            border-top: 2px solid #e0e0e0;
+            padding: 20px;
+            text-align: center;
+            margin-top: 30px;
+        }
+
+        .footer h3 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .footer p {
+            color: #666;
+            margin: 5px 0;
+            font-size: 0.9em;
+        }
+
+        .footer .paper-codes {
+            display: inline-flex;
+            gap: 15px;
+            margin-top: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .footer .paper-code {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.85em;
+        }
+
+        .misconception-tracker {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 6px;
+            display: none;
+        }
+
+        .misconception-tracker.visible {
+            display: block;
+        }
+
+        .misconception-tracker h3 {
+            color: #856404;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .misconception-item {
+            background: white;
+            padding: 12px;
+            margin: 8px 0;
+            border-radius: 4px;
+            border-left: 3px solid #ff9800;
+        }
+
+        .misconception-item .error-type {
+            font-weight: 600;
+            color: #d32f2f;
+            margin-bottom: 5px;
+        }
+
+        .misconception-item .explanation {
+            color: #555;
+            font-size: 0.9em;
+            margin: 5px 0;
+        }
+
+        .misconception-item .correct-way {
+            background: #e8f5e9;
+            padding: 8px;
+            margin-top: 8px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85em;
+            color: #2e7d32;
+        }
+
+        .misconception-stats {
+            background: white;
+            padding: 10px;
+            margin-top: 10px;
+            border-radius: 4px;
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .stat-label {
+            font-size: 0.8em;
+            color: #666;
+        }
+
+        .toggle-tracker-btn {
+            background: #ffc107;
+            color: #333;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 600;
+            margin-left: 10px;
+        }
+
+        .toggle-tracker-btn:hover {
+            background: #ffb300;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🎓 WOW Sir's Cambridge Pseudocode Interpreter</h1>
+        <p>Cambridge IGCSE Computer Science 0478 | O-Level 2210 | A-Level 9618</p>
+        <p style="font-size: 0.85em; opacity: 0.85; margin-top: 5px;">Created for Students | Interactive Cell-Based Learning</p>
+        <p style="font-size: 0.85em; opacity: 0.9; margin-top: 10px;">
+            📧 <a href="mailto:wowsirsupreme@gmail.com" style="color: white; text-decoration: none;">wowsirsupreme@gmail.com</a> | 
+            📱 <a href="tel:+233541505067" style="color: white; text-decoration: none;">+233 54 150 5067</a> | 
+            <a href="https://wa.me/233541505067?text=Hi%20WOW%20Sir!%20I%20need%20help%20with%20Cambridge%20CS" target="_blank" style="background: #25D366; color: white; padding: 4px 12px; border-radius: 4px; text-decoration: none; font-weight: bold; margin: 0 3px;" title="Chat on WhatsApp">💬 WhatsApp</a> | 
+            <a href="https://t.me/WOWSIRSUPREME" target="_blank" style="background: #0088cc; color: white; padding: 4px 12px; border-radius: 4px; text-decoration: none; font-weight: bold; margin: 0 3px;" title="Message on Telegram">✈️ Telegram</a>
+        </p>
+    </div>
+
+    <div class="toolbar">
+        <button class="primary" onclick="addCell('code')">+ Code</button>
+        <button onclick="addCell('text')">+ Text</button>
+        <button onclick="runAllCells()">▶ Run All</button>
+        <button onclick="clearAllOutputs()">🗑 Clear Outputs</button>
+        <button onclick="location.reload()" style="background: #ff9800; color: white; border: none;">🔄 Refresh</button>
+        <button onclick="loadExample()">📝 Example</button>
+        <button class="toggle-tracker-btn" onclick="toggleMisconceptionTracker()">⚠️ Misconceptions</button>
+        <span class="shortcut-hint">💡 Shift+Enter to run cell</span>
+    </div>
+
+    <div class="container">
+        <div class="misconception-tracker" id="misconception-tracker">
+            <h3>⚠️ Common Misconceptions Detected</h3>
+            <div id="misconception-list">
+                <!-- Misconceptions will be added here -->
+            </div>
+            <div class="misconception-stats">
+                <div class="stat-item">
+                    <div class="stat-number" id="total-errors">0</div>
+                    <div class="stat-label">Total Errors</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number" id="syntax-errors">0</div>
+                    <div class="stat-label">Syntax Issues</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number" id="logic-errors">0</div>
+                    <div class="stat-label">Logic Issues</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number" id="style-warnings">0</div>
+                    <div class="stat-label">Style Warnings</div>
+                </div>
+            </div>
+            
+            <div style="margin-top: 15px; display: flex; gap: 10px; flex-wrap: wrap; justify-content: center;">
+                <button onclick="setStudentName()" style="padding: 8px 16px; background: #2196f3; color: white; border: none; border-radius: 4px; cursor: pointer;">👤 Change Name</button>
+                <button onclick="syncToGoogleSheets()" style="padding: 8px 16px; background: #4caf50; color: white; border: none; border-radius: 4px; cursor: pointer;">📊 Sync Now</button>
+                <button onclick="exportToCSV()" style="padding: 8px 16px; background: #ff9800; color: white; border: none; border-radius: 4px; cursor: pointer;">💾 Export CSV</button>
+                <button onclick="viewStatistics()" style="padding: 8px 16px; background: #9c27b0; color: white; border: none; border-radius: 4px; cursor: pointer;">📈 Stats</button>
+                <button onclick="clearAllLogs()" style="padding: 8px 16px; background: #f44336; color: white; border: none; border-radius: 4px; cursor: pointer;">🗑️ Clear</button>
+            </div>
+            
+            <div style="margin-top: 10px; padding: 10px; background: white; border-radius: 4px; font-size: 0.85em; color: #666; text-align: center;">
+                <strong>Auto-Sync:</strong> <span id="sync-mode">Ready (syncs every 2 min when online)</span>
+                <br>
+                <span id="student-name-display">Student: Loading...</span> | 
+                <span id="log-count">0 logs stored</span>
+            </div>
+        </div>
+
+        <div id="cells-container">
+            <!-- Cells will be added here -->
+        </div>
+
+        <div class="add-cell-button">
+            <button onclick="addCell('code')">+ Add Cell</button>
+        </div>
+
+        <div class="help-panel">
+            <h2>📚 Cambridge Pseudocode Syntax Guide</h2>
+            
+            <div class="keyboard-shortcuts">
+                <h3>⌨️ Keyboard Shortcuts</h3>
+                <ul>
+                    <li><kbd>Shift</kbd> + <kbd>Enter</kbd> - Run current cell</li>
+                    <li><kbd>Ctrl</kbd> + <kbd>Enter</kbd> - Run cell (stay in cell)</li>
+                    <li><kbd>Enter</kbd> - Auto-indent (in code cells)</li>
+                    <li><kbd>Delete</kbd> - Delete cell (when focused on toolbar)</li>
+                </ul>
+                <p style="margin-top: 10px; font-size: 0.85em; color: #666;">
+                    💡 <strong>Auto-indentation:</strong> Press Enter after IF THEN, FOR, WHILE, ELSE, etc. to auto-indent the next line!
+                </p>
+            </div>
+
+            <div class="help-grid">
+                <div class="help-item">
+                    <h3>Variables (PascalCase)</h3>
+                    <code>DECLARE StudentName : STRING</code><br>
+                    <code>StudentName <- "Alice"</code>
+                </div>
+                <div class="help-item">
+                    <h3>Data Types</h3>
+                    <code>INTEGER, REAL, STRING, CHAR, BOOLEAN</code>
+                </div>
+                <div class="help-item">
+                    <h3>Input/Output</h3>
+                    <code>INPUT Score</code><br>
+                    <code>OUTPUT "Result: ", Score</code>
+                </div>
+                <div class="help-item">
+                    <h3>IF-ELSE IF</h3>
+                    <code>IF condition THEN</code><br>
+                    <code>ELSE IF condition THEN</code><br>
+                    <code>ELSE ... ENDIF</code>
+                </div>
+                <div class="help-item">
+                    <h3>CASE Statements</h3>
+                    <code>CASE OF Variable</code><br>
+                    <code>&nbsp;&nbsp;90 TO 100 : ...</code><br>
+                    <code>&nbsp;&nbsp;OTHERWISE : ...</code><br>
+                    <code>ENDCASE</code>
+                </div>
+                <div class="help-item">
+                    <h3>Loops</h3>
+                    <code>FOR I <- 1 TO 10</code><br>
+                    <code>WHILE condition</code><br>
+                    <code>REPEAT ... UNTIL</code>
+                </div>
+                <div class="help-item">
+                    <h3>1D Arrays</h3>
+                    <code>ARRAY[1:10] OF INTEGER</code><br>
+                    <code>Scores[5] <- 100</code>
+                </div>
+                <div class="help-item">
+                    <h3>2D Arrays</h3>
+                    <code>ARRAY[1:3, 1:4] OF INTEGER</code><br>
+                    <code>Grid[2, 3] <- 50</code>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">
+        <h3>🎓 WOW Sir's Cambridge Pseudocode Interpreter</h3>
+        <p>Interactive learning tool for Cambridge Computer Science students</p>
+        <p><strong>Supporting all Cambridge syllabuses:</strong></p>
+        <div class="paper-codes">
+            <span class="paper-code">IGCSE 0478</span>
+            <span class="paper-code">O-Level 2210</span>
+            <span class="paper-code">A-Level 9618</span>
+        </div>
+        <p style="margin-top: 15px; font-size: 0.85em; color: #999;">
+            💡 Features: Cell-based execution | Auto-indentation | PascalCase naming | <- assignment operator
+        </p>
+        <p style="margin-top: 5px; font-size: 0.85em; color: #999;">
+            Created with ❤️ for Computer Science Education
+        </p>
+    </div>
+
+    <script>
+        let cellCounter = 0;
+        const globalVariables = {};
+        const globalArrays = {};
+        const globalConstants = {};
+
+        // Google Sheets Configuration - Simple version
+        const GOOGLE_SHEETS_CONFIG = {
+            webAppUrl: 'https://script.google.com/macros/s/AKfycbzibjQTOvg_eo6poJRogj9pQBbiVyTIrDUUb67FC3LD5LL3xUlxbJsXHkjWIw8S7wR-ZA/exec', // Google Apps Script Web App URL
+            isConfigured: true
+        };
+
+        // Misconception Tracker
+        const misconceptionTracker = {
+            totalErrors: 0,
+            syntaxErrors: 0,
+            logicErrors: 0,
+            styleWarnings: 0,
+            misconceptions: [],
+            sessionData: {
+                sessionId: generateSessionId(),
+                startTime: new Date().toISOString(),
+                studentName: localStorage.getItem('studentName') || null,
+                logs: []
+            }
+        };
+
+        // Generate unique session ID
+        function generateSessionId() {
+            return 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+        }
+
+        // Prompt for student name on first use
+        function ensureStudentName() {
+            if (!misconceptionTracker.sessionData.studentName) {
+                const name = prompt('👋 Welcome! Please enter your name to get started:');
+                if (name && name.trim()) {
+                    misconceptionTracker.sessionData.studentName = name.trim();
+                    localStorage.setItem('studentName', name.trim());
+                    updateSyncStatus(`Welcome, ${name}!`);
+                } else {
+                    misconceptionTracker.sessionData.studentName = 'Anonymous_' + Date.now();
+                    localStorage.setItem('studentName', misconceptionTracker.sessionData.studentName);
+                }
+            }
+        }
+
+        // Log misconception data
+        function logMisconception(misconception) {
+            ensureStudentName();
+            
+            const logEntry = {
+                timestamp: new Date().toISOString(),
+                sessionId: misconceptionTracker.sessionData.sessionId,
+                studentName: misconceptionTracker.sessionData.studentName,
+                cellId: misconception.cellId,
+                lineNumber: misconception.line,
+                misconceptionType: misconception.type,
+                message: misconception.message,
+                category: misconception.category,
+                wrongCode: misconception.code,
+                correctExample: misconception.correctExample
+            };
+
+            misconceptionTracker.sessionData.logs.push(logEntry);
+            
+            // Save to localStorage
+            saveToLocalStorage();
+            
+            // Try to sync to Google Sheets if online and configured
+            if (navigator.onLine && GOOGLE_SHEETS_CONFIG.isConfigured) {
+                syncToGoogleSheets();
+            }
+        }
+
+        // Save session data to localStorage
+        function saveToLocalStorage() {
+            const existingData = JSON.parse(localStorage.getItem('misconceptionLogs') || '[]');
+            
+            // Merge current session logs
+            const allLogs = [...existingData, ...misconceptionTracker.sessionData.logs];
+            
+            // Keep only unique logs
+            const uniqueLogs = Array.from(new Map(allLogs.map(log => 
+                [log.timestamp + log.misconceptionType + log.cellId, log]
+            )).values());
+            
+            localStorage.setItem('misconceptionLogs', JSON.stringify(uniqueLogs));
+            updateSyncStatus('Saved locally');
+        }
+
+        // Sync data to Google Sheets via Web App
+        async function syncToGoogleSheets() {
+            if (!GOOGLE_SHEETS_CONFIG.isConfigured) {
+                console.log('Google Sheets not configured');
+                return;
+            }
+
+            const allLogs = JSON.parse(localStorage.getItem('misconceptionLogs') || '[]');
+            
+            if (allLogs.length === 0) {
+                updateSyncStatus('No data to sync');
+                return;
+            }
+
+            try {
+                updateSyncStatus('Syncing to Google Sheets...');
+
+                const response = await fetch(GOOGLE_SHEETS_CONFIG.webAppUrl, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        logs: allLogs,
+                        action: 'addLogs'
+                    })
+                });
+
+                // Note: no-cors mode doesn't allow reading response
+                // We'll assume success if no error thrown
+                updateSyncStatus(`✓ Synced ${allLogs.length} logs`);
+                
+                // Mark logs as synced
+                localStorage.setItem('lastSyncTime', new Date().toISOString());
+                
+            } catch (error) {
+                console.error('Sync error:', error);
+                updateSyncStatus('Sync failed - saved locally');
+            }
+        }
+
+        // Configure Google Sheets Web App URL
+        window.configureGoogleSheets = function(webAppUrl) {
+            GOOGLE_SHEETS_CONFIG.webAppUrl = webAppUrl;
+            GOOGLE_SHEETS_CONFIG.isConfigured = true;
+            
+            localStorage.setItem('googleSheetsWebAppUrl', webAppUrl);
+            
+            updateSyncStatus('Google Sheets configured!');
+            console.log('Google Sheets configured successfully!');
+            
+            // Trigger initial sync
+            syncToGoogleSheets();
+        };
+
+        // Load saved configuration
+        function loadSavedConfig() {
+            const savedUrl = localStorage.getItem('googleSheetsWebAppUrl');
+            if (savedUrl) {
+                GOOGLE_SHEETS_CONFIG.webAppUrl = savedUrl;
+                GOOGLE_SHEETS_CONFIG.isConfigured = true;
+            }
+        }
+
+        // Update sync status in UI
+        function updateSyncStatus(message) {
+            let statusDiv = document.getElementById('sync-status');
+            if (!statusDiv) {
+                statusDiv = document.createElement('div');
+                statusDiv.id = 'sync-status';
+                statusDiv.style.cssText = 'position: fixed; bottom: 20px; right: 20px; background: #4caf50; color: white; padding: 10px 20px; border-radius: 20px; font-size: 0.85em; box-shadow: 0 2px 8px rgba(0,0,0,0.2); z-index: 1000;';
+                document.body.appendChild(statusDiv);
+            }
+            
+            statusDiv.textContent = message;
+            statusDiv.style.display = 'block';
+            
+            setTimeout(() => {
+                statusDiv.style.display = 'none';
+            }, 3000);
+        }
+
+        // Export to CSV as backup
+        function exportToCSV() {
+            const allLogs = JSON.parse(localStorage.getItem('misconceptionLogs') || '[]');
+            
+            if (allLogs.length === 0) {
+                alert('No data to export');
+                return;
+            }
+
+            let csv = 'Timestamp,Session ID,Student Name,Cell ID,Line,Misconception Type,Category,Message,Wrong Code,Correct Example\n';
+            
+            allLogs.forEach(log => {
+                const escapeCsv = (str) => `"${String(str).replace(/"/g, '""')}"`;
+                csv += `${escapeCsv(log.timestamp)},${escapeCsv(log.sessionId)},${escapeCsv(log.studentName)},${escapeCsv(log.cellId)},${log.lineNumber},${escapeCsv(log.misconceptionType)},${escapeCsv(log.category)},${escapeCsv(log.message)},${escapeCsv(log.wrongCode)},${escapeCsv(log.correctExample)}\n`;
+            });
+
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `WOW_Sir_Misconceptions_${new Date().toISOString().split('T')[0]}.csv`;
+            a.click();
+            window.URL.revokeObjectURL(url);
+            
+            updateSyncStatus(`✓ Exported ${allLogs.length} logs to CSV`);
+        }
+
+        // Clear all logs
+        function clearAllLogs() {
+            if (confirm('Are you sure you want to clear all misconception logs? This cannot be undone.')) {
+                localStorage.removeItem('misconceptionLogs');
+                misconceptionTracker.sessionData.logs = [];
+                updateSyncStatus('All logs cleared');
+                analyzeAllCells();
+            }
+        }
+
+        // Change student name
+        function setStudentName() {
+            const currentName = misconceptionTracker.sessionData.studentName;
+            const name = prompt('Enter your name:', currentName);
+            if (name && name.trim()) {
+                misconceptionTracker.sessionData.studentName = name.trim();
+                localStorage.setItem('studentName', name.trim());
+                updateSyncStatus(`Student: ${name}`);
+                
+                // Update display
+                const display = document.getElementById('student-name-display');
+                if (display) {
+                    display.textContent = `Student: ${name.trim()}`;
+                }
+            }
+        }
+
+        // View statistics
+        function viewStatistics() {
+            const allLogs = JSON.parse(localStorage.getItem('misconceptionLogs') || '[]');
+            
+            if (allLogs.length === 0) {
+                alert('No misconception data available yet. Start coding and run the misconception tracker!');
+                return;
+            }
+            
+            const totalLogs = allLogs.length;
+            const categoryCount = {};
+            const typeCount = {};
+            
+            allLogs.forEach(log => {
+                categoryCount[log.category] = (categoryCount[log.category] || 0) + 1;
+                typeCount[log.misconceptionType] = (typeCount[log.misconceptionType] || 0) + 1;
+            });
+            
+            let message = `📊 MISCONCEPTION STATISTICS\n\n`;
+            message += `Total Logs: ${totalLogs}\n\n`;
+            message += `By Category:\n`;
+            Object.entries(categoryCount).forEach(([cat, count]) => {
+                message += `  ${cat}: ${count} (${((count/totalLogs)*100).toFixed(1)}%)\n`;
+            });
+            
+            message += `\nTop 5 Misconceptions:\n`;
+            const top5 = Object.entries(typeCount)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 5);
+            
+            top5.forEach(([type, count], index) => {
+                message += `  ${index + 1}. ${type}: ${count}\n`;
+            });
+            
+            alert(message);
+        }
+
+        // Listen for online/offline events
+        window.addEventListener('online', () => {
+            updateSyncStatus('Online - Syncing...');
+            if (GOOGLE_SHEETS_CONFIG.isConfigured) {
+                syncToGoogleSheets();
+            }
+        });
+
+        window.addEventListener('offline', () => {
+            updateSyncStatus('Offline - Saving locally');
+        });
+
+        // Auto-sync every 2 minutes if online
+        setInterval(() => {
+            if (navigator.onLine && GOOGLE_SHEETS_CONFIG.isConfigured) {
+                const unsyncedLogs = JSON.parse(localStorage.getItem('misconceptionLogs') || '[]');
+                if (unsyncedLogs.length > 0) {
+                    syncToGoogleSheets();
+                }
+            }
+        }, 2 * 60 * 1000); // 2 minutes
+
+        // Load saved configuration on startup
+        loadSavedConfig();
+        
+        // Prompt for name on first load
+        ensureStudentName();
+
+        const commonMisconceptions = {
+            // Assignment operator
+            'USING_EQUALS_FOR_ASSIGNMENT': {
+                pattern: /^(\w+)\s*=\s*(.+)$/,
+                message: 'Using "=" instead of "<-" for assignment',
+                explanation: 'In Cambridge pseudocode, use <- for assignment, not =',
+                correctExample: 'Score <- 85',
+                wrongExample: 'Score = 85',
+                type: 'syntax'
+            },
+            
+            // Missing THEN after IF
+            'MISSING_THEN': {
+                pattern: /^IF\s+(.+)$/,
+                checkFunction: (line) => {
+                    return line.match(/^IF\s+/) && !line.match(/\s+THEN$/i);
+                },
+                message: 'Missing THEN after IF condition',
+                explanation: 'IF statements must end with THEN',
+                correctExample: 'IF Score > 90 THEN',
+                wrongExample: 'IF Score > 90',
+                type: 'syntax'
+            },
+            
+            // Using lowercase keywords
+            'LOWERCASE_KEYWORDS': {
+                checkFunction: (line) => {
+                    const keywords = ['if', 'then', 'else', 'endif', 'for', 'to', 'next', 'while', 'endwhile', 'repeat', 'until', 'case', 'endcase', 'declare', 'output', 'input'];
+                    for (let keyword of keywords) {
+                        if (line.match(new RegExp(`^${keyword}\\b`, ''))) {
+                            return true;
+                        }
+                    }
+                    return false;
+                },
+                message: 'Keywords should be in UPPERCASE',
+                explanation: 'Cambridge pseudocode requires keywords in UPPERCASE',
+                correctExample: 'IF Score > 90 THEN',
+                wrongExample: 'if Score > 90 then',
+                type: 'style'
+            },
+            
+            // Using camelCase instead of PascalCase
+            'CAMELCASE_VARIABLES': {
+                checkFunction: (line) => {
+                    const declareMatch = line.match(/^DECLARE\s+([a-z]\w+)\s*:/i);
+                    if (declareMatch && declareMatch[1].match(/^[a-z]/)) {
+                        return declareMatch[1];
+                    }
+                    return false;
+                },
+                message: 'Variable names should use PascalCase, not camelCase',
+                explanation: 'Start variable names with uppercase: StudentName, TotalScore',
+                correctExample: 'DECLARE StudentScore : INTEGER',
+                wrongExample: 'DECLARE studentScore : INTEGER',
+                type: 'style'
+            },
+            
+            // Missing space around operators
+            'NO_SPACE_OPERATORS': {
+                checkFunction: (line) => {
+                    return line.match(/<-\w/) || line.match(/\w<-/) || 
+                           line.match(/[+\-*\/](?!\s)/) || line.match(/(?<!\s)[+\-*\/]/);
+                },
+                message: 'Add spaces around operators',
+                explanation: 'Operators should have spaces: Score <- 85, X + Y',
+                correctExample: 'Total <- Score + Bonus',
+                wrongExample: 'Total<-Score+Bonus',
+                type: 'style'
+            },
+            
+            // Array declaration errors
+            'ARRAY_DECLARATION_ERROR': {
+                checkFunction: (line) => {
+                    if (line.match(/ARRAY\s*\[\s*\d+\s*\]/i)) {
+                        return true; // Missing upper bound
+                    }
+                    return false;
+                },
+                message: 'Array bounds must have lower and upper limits',
+                explanation: 'Arrays need both bounds: ARRAY[1:10] not ARRAY[10]',
+                correctExample: 'DECLARE Scores : ARRAY[1:5] OF INTEGER',
+                wrongExample: 'DECLARE Scores : ARRAY[5] OF INTEGER',
+                type: 'syntax'
+            },
+            
+            // Missing data type in declaration
+            'MISSING_DATA_TYPE': {
+                checkFunction: (line) => {
+                    return line.match(/^DECLARE\s+\w+\s*$/i);
+                },
+                message: 'Missing data type in DECLARE statement',
+                explanation: 'Every DECLARE needs a data type',
+                correctExample: 'DECLARE Score : INTEGER',
+                wrongExample: 'DECLARE Score',
+                type: 'syntax'
+            },
+            
+            // Using ; at end of line
+            'SEMICOLON_AT_END': {
+                checkFunction: (line) => {
+                    return line.trim().endsWith(';');
+                },
+                message: 'Pseudocode does not use semicolons',
+                explanation: 'Remove ; from end of lines - not needed in pseudocode',
+                correctExample: 'Score <- 85',
+                wrongExample: 'Score <- 85;',
+                type: 'style'
+            },
+            
+            // Missing NEXT variable
+            'MISSING_NEXT_VARIABLE': {
+                checkFunction: (line) => {
+                    return line.match(/^NEXT\s*$/i);
+                },
+                message: 'NEXT should include the loop variable',
+                explanation: 'Specify which variable: NEXT I',
+                correctExample: 'NEXT I',
+                wrongExample: 'NEXT',
+                type: 'style'
+            },
+            
+            // Mismatched quotes
+            'MISMATCHED_QUOTES': {
+                checkFunction: (line) => {
+                    const singleQuotes = (line.match(/'/g) || []).length;
+                    const doubleQuotes = (line.match(/"/g) || []).length;
+                    return (singleQuotes % 2 !== 0) || (doubleQuotes % 2 !== 0);
+                },
+                message: 'Mismatched quotation marks',
+                explanation: 'Strings need matching quotes: "text" or \'c\'',
+                correctExample: 'OUTPUT "Hello World"',
+                wrongExample: 'OUTPUT "Hello World',
+                type: 'syntax'
+            }
+        };
+
+        function checkForMisconceptions(code, cellId) {
+            const lines = code.split('\n');
+            const cellMisconceptions = [];
+            
+            lines.forEach((line, index) => {
+                const trimmedLine = line.trim();
+                if (!trimmedLine || trimmedLine.startsWith('//')) return;
+                
+                // Check each misconception
+                for (let [key, misconception] of Object.entries(commonMisconceptions)) {
+                    let detected = false;
+                    let varName = '';
+                    
+                    if (misconception.checkFunction) {
+                        const result = misconception.checkFunction(trimmedLine);
+                        if (result) {
+                            detected = true;
+                            if (typeof result === 'string') varName = result;
+                        }
+                    } else if (misconception.pattern) {
+                        detected = misconception.pattern.test(trimmedLine);
+                    }
+                    
+                    if (detected) {
+                        const existingIndex = cellMisconceptions.findIndex(m => 
+                            m.type === key && m.line === index + 1
+                        );
+                        
+                        if (existingIndex === -1) {
+                            const misconceptionData = {
+                                type: key,
+                                line: index + 1,
+                                code: trimmedLine,
+                                message: misconception.message,
+                                explanation: misconception.explanation,
+                                correctExample: misconception.correctExample,
+                                wrongExample: misconception.wrongExample,
+                                category: misconception.type,
+                                varName: varName,
+                                cellId: cellId
+                            };
+                            
+                            cellMisconceptions.push(misconceptionData);
+                            
+                            // Log to tracking system
+                            logMisconception(misconceptionData);
+                            
+                            // Update stats
+                            misconceptionTracker.totalErrors++;
+                            if (misconception.type === 'syntax') {
+                                misconceptionTracker.syntaxErrors++;
+                            } else if (misconception.type === 'logic') {
+                                misconceptionTracker.logicErrors++;
+                            } else if (misconception.type === 'style') {
+                                misconceptionTracker.styleWarnings++;
+                            }
+                        }
+                    }
+                }
+            });
+            
+            return cellMisconceptions;
+        }
+
+        function displayMisconceptions(misconceptions) {
+            const listDiv = document.getElementById('misconception-list');
+            listDiv.innerHTML = '';
+            
+            if (misconceptions.length === 0) {
+                listDiv.innerHTML = '<div style="padding: 20px; text-align: center; color: #4caf50;">✓ No misconceptions detected! Great job!</div>';
+                return;
+            }
+            
+            misconceptions.forEach(m => {
+                const item = document.createElement('div');
+                item.className = 'misconception-item';
+                item.innerHTML = `
+                    <div class="error-type">⚠️ ${m.message}</div>
+                    <div style="font-size: 0.85em; color: #666; margin: 3px 0;">
+                        Cell: ${m.cellId} | Line ${m.line}: <code>${escapeHtml(m.code)}</code>
+                    </div>
+                    <div class="explanation">${m.explanation}</div>
+                    <div style="display: flex; gap: 10px; margin-top: 8px; font-size: 0.85em;">
+                        <div style="flex: 1;">
+                            <div style="color: #c62828; font-weight: 600;">❌ Wrong:</div>
+                            <code style="background: #ffebee; padding: 4px 8px; border-radius: 3px; display: block; margin-top: 4px;">${m.wrongExample}</code>
+                        </div>
+                        <div style="flex: 1;">
+                            <div style="color: #2e7d32; font-weight: 600;">✓ Correct:</div>
+                            <code style="background: #e8f5e9; padding: 4px 8px; border-radius: 3px; display: block; margin-top: 4px;">${m.correctExample}</code>
+                        </div>
+                    </div>
+                `;
+                listDiv.appendChild(item);
+            });
+            
+            // Update stats display
+            document.getElementById('total-errors').textContent = misconceptionTracker.totalErrors;
+            document.getElementById('syntax-errors').textContent = misconceptionTracker.syntaxErrors;
+            document.getElementById('logic-errors').textContent = misconceptionTracker.logicErrors;
+            document.getElementById('style-warnings').textContent = misconceptionTracker.styleWarnings;
+            
+            // Update student name and log count
+            const studentNameDisplay = document.getElementById('student-name-display');
+            if (studentNameDisplay) {
+                studentNameDisplay.textContent = `Student: ${misconceptionTracker.sessionData.studentName ||'Anonymous'}`;
+            }
+            
+            const logCountDisplay = document.getElementById('log-count');
+            if (logCountDisplay) {
+                const totalLogs = JSON.parse(localStorage.getItem('misconceptionLogs') || '[]').length;
+                logCountDisplay.textContent = `${totalLogs} logs stored`;
+            }
+        }
+
+        function toggleMisconceptionTracker() {
+            const tracker = document.getElementById('misconception-tracker');
+            tracker.classList.toggle('visible');
+            
+            if (tracker.classList.contains('visible')) {
+                // Run analysis on all cells
+                analyzeAllCells();
+            }
+        }
+
+        function analyzeAllCells() {
+            // Reset stats
+            misconceptionTracker.totalErrors = 0;
+            misconceptionTracker.syntaxErrors = 0;
+            misconceptionTracker.logicErrors = 0;
+            misconceptionTracker.styleWarnings = 0;
+            misconceptionTracker.misconceptions = [];
+            
+            // Check all code cells
+            const cells = document.querySelectorAll('.cell[data-type="code"]');
+            cells.forEach(cell => {
+                const textarea = cell.querySelector('textarea');
+                const code = textarea.value;
+                const cellId = cell.id;
+                
+                const cellMisconceptions = checkForMisconceptions(code, cellId);
+                misconceptionTracker.misconceptions.push(...cellMisconceptions);
+            });
+            
+            displayMisconceptions(misconceptionTracker.misconceptions);
+        }
+
+        class CambridgePseudocodeInterpreter {
+            constructor(globalContext) {
+                this.variables = globalContext.variables;
+                this.constants = globalContext.constants;
+                this.arrays = globalContext.arrays;
+                this.procedures = {};
+                this.functions = {};
+                this.output = [];
+                this.currentLine = 0;
+                this.lines = [];
+            }
+
+            log(message, type = 'normal') {
+                this.output.push({ message, type });
+            }
+
+            async run(code) {
+                this.procedures = {};
+                this.functions = {};
+                this.output = [];
+                this.currentLine = 0;
+                
+                const rawLines = code.split('\n');
+                this.lines = [];
+                let codeLineNumber = 1;
+                
+                for (let i = 0; i < rawLines.length; i++) {
+                    const commentPos = rawLines[i].indexOf('//');
+                    let lineText;
+                    if (commentPos !== -1) {
+                        lineText = rawLines[i].substring(0, commentPos).trimEnd();
+                    } else {
+                        lineText = rawLines[i].trimEnd();
+                    }
+                    
+                    const actualLineNum = rawLines[i].trim() ? codeLineNumber++ : null;
+                    
+                    this.lines.push({ 
+                        text: lineText, 
+                        lineNum: actualLineNum,
+                        displayLineNum: i + 1
+                    });
+                }
+
+                try {
+                    await this.firstPass();
+                    await this.execute();
+                } catch (error) {
+                    const lineInfo = this.lines[this.currentLine];
+                    const lineNum = lineInfo?.lineNum || lineInfo?.displayLineNum || '?';
+                    this.log(`Error at line ${lineNum}: ${error.message}`, 'error');
+                }
+
+                return this.output;
+            }
+
+            async firstPass() {
+                let i = 0;
+                while (i < this.lines.length) {
+                    const line = this.lines[i].text.trim();
+                    
+                    if (line.match(/^PROCEDURE\s+(\w+)\s*\(/i)) {
+                        const endIdx = this.findEnd(i, 'PROCEDURE', 'ENDPROCEDURE');
+                        const match = line.match(/^PROCEDURE\s+(\w+)\s*\((.*)\)/i);
+                        const name = match[1];
+                        this.procedures[name] = {
+                            params: this.parseParameters(match[2]),
+                            startLine: i,
+                            endLine: endIdx
+                        };
+                        i = endIdx + 1;
+                    } else if (line.match(/^FUNCTION\s+(\w+)\s*\(/i)) {
+                        const endIdx = this.findEnd(i, 'FUNCTION', 'ENDFUNCTION');
+                        const match = line.match(/^FUNCTION\s+(\w+)\s*\((.*)\)\s*RETURNS\s+(\w+)/i);
+                        const name = match[1];
+                        this.functions[name] = {
+                            params: this.parseParameters(match[2]),
+                            returnType: match[3],
+                            startLine: i,
+                            endLine: endIdx
+                        };
+                        i = endIdx + 1;
+                    } else {
+                        i++;
+                    }
+                }
+            }
+
+            parseParameters(paramStr) {
+                if (!paramStr || !paramStr.trim()) return [];
+                
+                const params = [];
+                const parts = paramStr.split(',');
+                
+                for (let part of parts) {
+                    part = part.trim();
+                    const match = part.match(/^(BYREF\s+|BYVAL\s+)?(\w+)\s*:\s*(\w+)/i);
+                    if (match) {
+                        params.push({
+                            byRef: match[1] && match[1].trim().toUpperCase() === 'BYREF',
+                            name: match[2],
+                            type: match[3]
+                        });
+                    }
+                }
+                return params;
+            }
+
+            async execute() {
+                while (this.currentLine < this.lines.length) {
+                    const line = this.lines[this.currentLine].text.trim();
+                    if (line && !line.startsWith('PROCEDURE') && !line.startsWith('FUNCTION')) {
+                        await this.executeLine(line);
+                    }
+                    this.currentLine++;
+                }
+            }
+
+            async executeLine(line) {
+                if (!line) return;
+
+                try {
+                    await this.executeLineInternal(line);
+                } catch (error) {
+                    const lineInfo = this.lines[this.currentLine];
+                    const lineNum = lineInfo?.lineNum || lineInfo?.displayLineNum || '?';
+                    throw new Error(`Line ${lineNum}: ${error.message}`);
+                }
+            }
+
+            async executeLineInternal(line) {
+                // DECLARE variable
+                if (line.match(/^DECLARE\s+(\w+)\s*:\s*(\w+)/i)) {
+                    const match = line.match(/^DECLARE\s+(\w+)\s*:\s*(\w+)/i);
+                    const varName = match[1];
+                    const dataType = match[2].toUpperCase();
+                    this.variables[varName] = this.getDefaultValue(dataType);
+                    return;
+                }
+
+                // DECLARE array
+                if (line.match(/^DECLARE\s+(\w+)\s*:\s*ARRAY\[(.+)\]\s*OF\s*(\w+)/i)) {
+                    const match = line.match(/^DECLARE\s+(\w+)\s*:\s*ARRAY\[(.+)\]\s*OF\s*(\w+)/i);
+                    const arrayName = match[1];
+                    const dimensions = match[2];
+                    const dataType = match[3].toUpperCase();
+                    
+                    if (dimensions.includes(',')) {
+                        const [dim1, dim2] = dimensions.split(',');
+                        const [lower1, upper1] = dim1.split(':').map(s => parseInt(s.trim()));
+                        const [lower2, upper2] = dim2.split(':').map(s => parseInt(s.trim()));
+                        
+                        this.arrays[arrayName] = {
+                            dimensions: 2,
+                            lower1, upper1, lower2, upper2,
+                            data: {},
+                            type: dataType
+                        };
+                    } else {
+                        const [lower, upper] = dimensions.split(':').map(s => parseInt(s.trim()));
+                        this.arrays[arrayName] = {
+                            dimensions: 1,
+                            lower, upper,
+                            data: {},
+                            type: dataType
+                        };
+                    }
+                    return;
+                }
+
+                // CONSTANT
+                if (line.match(/^CONSTANT\s+(\w+)\s*=\s*(.+)/i)) {
+                    const match = line.match(/^CONSTANT\s+(\w+)\s*=\s*(.+)/i);
+                    const constName = match[1];
+                    const value = this.evaluateExpression(match[2]);
+                    this.constants[constName] = value;
+                    return;
+                }
+
+                // Assignment
+                if (line.match(/^(\w+)(\[.+\])?\s*<-\s*(.+)$/)) {
+                    const match = line.match(/^(\w+)(\[.+\])?\s*<-\s*(.+)$/);
+                    const varName = match[1];
+                    const arrayIndex = match[2];
+                    const value = this.evaluateExpression(match[3]);
+                    
+                    if (arrayIndex) {
+                        const indices = arrayIndex.slice(1, -1).split(',').map(idx => 
+                            this.evaluateExpression(idx.trim())
+                        );
+                        
+                        if (this.arrays[varName]) {
+                            if (this.arrays[varName].dimensions === 1) {
+                                this.arrays[varName].data[indices[0]] = value;
+                            } else {
+                                const key = `${indices[0]},${indices[1]}`;
+                                this.arrays[varName].data[key] = value;
+                            }
+                        }
+                    } else {
+                        this.variables[varName] = value;
+                    }
+                    return;
+                }
+
+                // OUTPUT
+                if (line.match(/^OUTPUT\s+(.+)/i)) {
+                    const match = line.match(/^OUTPUT\s+(.+)/i);
+                    const expressions = this.splitByComma(match[1]);
+                    const values = expressions.map(expr => this.evaluateExpression(expr));
+                    this.log(values.join(''), 'success');
+                    return;
+                }
+
+                // INPUT
+                if (line.match(/^INPUT\s+(\w+)/i)) {
+                    const match = line.match(/^INPUT\s+(\w+)/i);
+                    const varName = match[1];
+                    const value = prompt(`Enter value for ${varName}:`);
+                    
+                    if (value !== null) {
+                        const numValue = parseFloat(value);
+                        this.variables[varName] = isNaN(numValue) ? value : numValue;
+                        this.log(`Input: ${varName} = ${this.variables[varName]}`, 'info');
+                    }
+                    return;
+                }
+
+                // IF statement
+                if (line.match(/^IF\s+(.+)\s+THEN$/i)) {
+                    await this.executeIf();
+                    return;
+                }
+
+                // CASE statement
+                if (line.match(/^CASE\s+OF\s+(\w+)$/i)) {
+                    await this.executeCase();
+                    return;
+                }
+
+                // FOR loop
+                if (line.match(/^FOR\s+(\w+)\s*<-\s*(.+)\s+TO\s+(.+)$/i)) {
+                    await this.executeFor(line);
+                    return;
+                }
+
+                // WHILE loop
+                if (line.match(/^WHILE\s+(.+)$/i)) {
+                    await this.executeWhile(line);
+                    return;
+                }
+
+                // REPEAT loop
+                if (line.match(/^REPEAT$/i)) {
+                    await this.executeRepeat();
+                    return;
+                }
+
+                // CASE statement
+                if (line.match(/^CASE\s+OF\s+(\w+)$/i)) {
+                    await this.executeCase();
+                    return;
+                }
+            }
+
+            async executeCase() {
+                const line = this.lines[this.currentLine].text.trim();
+                const match = line.match(/^CASE\s+OF\s+(\w+)$/i);
+                const varName = match[1];
+                const varValue = this.getVariableValue(varName);
+
+                const endLine = this.findEnd(this.currentLine, 'CASE', 'ENDCASE');
+                let executed = false;
+
+                for (let i = this.currentLine + 1; i < endLine && !executed; i++) {
+                    const caseLine = this.lines[i].text.trim();
+                    
+                    if (caseLine.match(/^OTHERWISE\s*:/i)) {
+                        if (!executed) {
+                            // Find statements after OTHERWISE
+                            let otherwiseEnd = i + 1;
+                            while (otherwiseEnd < endLine && 
+                                   !this.lines[otherwiseEnd].text.trim().match(/^.+\s*:/)) {
+                                otherwiseEnd++;
+                            }
+                            await this.executeBlock(i + 1, otherwiseEnd);
+                        }
+                        break;
+                    }
+                    
+                    const caseMatch = caseLine.match(/^(.+?)\s*:\s*(.*)$/);
+                    if (caseMatch) {
+                        const caseExpr = caseMatch[1].trim();
+                        const statement = caseMatch[2].trim();
+                        
+                        // Check if it's a range (e.g., "90 TO 100")
+                        const rangeMatch = caseExpr.match(/^(.+?)\s+TO\s+(.+)$/i);
+                        let matches = false;
+                        
+                        if (rangeMatch) {
+                            const lower = this.evaluateExpression(rangeMatch[1]);
+                            const upper = this.evaluateExpression(rangeMatch[2]);
+                            matches = (varValue >= lower && varValue <= upper);
+                        } else {
+                            const caseValue = this.evaluateExpression(caseExpr);
+                            matches = (caseValue === varValue);
+                        }
+                        
+                        if (matches && !executed) {
+                            // Execute the statement on the same line if any
+                            if (statement) {
+                                await this.executeLine(statement);
+                            }
+                            
+                            // Find and execute the block following this case
+                            let caseEnd = i + 1;
+                            while (caseEnd < endLine && 
+                                   !this.lines[caseEnd].text.trim().match(/^(.+\s*:|OTHERWISE\s*:)/)) {
+                                caseEnd++;
+                            }
+                            
+                            await this.executeBlock(i + 1, caseEnd);
+                            executed = true;
+                            i = caseEnd - 1;
+                        }
+                    }
+                }
+
+                this.currentLine = endLine;
+            }
+
+            getVariableValue(name) {
+                if (this.constants.hasOwnProperty(name)) {
+                    return this.constants[name];
+                }
+                if (this.variables.hasOwnProperty(name)) {
+                    return this.variables[name];
+                }
+                throw new Error(`Variable ${name} not found`);
+            }
+
+            async executeIf() {
+                const line = this.lines[this.currentLine].text.trim();
+                const match = line.match(/^IF\s+(.+)\s+THEN$/i);
+                const condition = match[1];
+                const conditionResult = this.evaluateCondition(condition);
+
+                const endLine = this.findEnd(this.currentLine, 'IF', 'ENDIF');
+                const elseLine = this.findElseOrElseIf(this.currentLine, endLine);
+
+                if (conditionResult) {
+                    const thenStart = this.currentLine + 1;
+                    const thenEnd = elseLine !== -1 ? elseLine : endLine;
+                    await this.executeBlock(thenStart, thenEnd);
+                    this.currentLine = endLine;
+                } else if (elseLine !== -1) {
+                    const elseLineText = this.lines[elseLine].text.trim();
+                    
+                    // Check if it's ELSE IF
+                    if (elseLineText.match(/^ELSE\s+IF\s+(.+)\s+THEN$/i)) {
+                        // Recursively handle ELSE IF as a new IF statement
+                        this.currentLine = elseLine;
+                        // Remove "ELSE " prefix to make it a regular IF
+                        const modifiedLine = elseLineText.replace(/^ELSE\s+/i, '');
+                        this.lines[elseLine].text = modifiedLine;
+                        await this.executeIf();
+                        // Restore original line
+                        this.lines[elseLine].text = elseLineText;
+                    } else {
+                        // Regular ELSE
+                        await this.executeBlock(elseLine + 1, endLine);
+                        this.currentLine = endLine;
+                    }
+                } else {
+                    this.currentLine = endLine;
+                }
+            }
+
+            async executeCase() {
+                const line = this.lines[this.currentLine].text.trim();
+                const match = line.match(/^CASE\s+OF\s+(\w+)$/i);
+                const varName = match[1];
+                const varValue = this.getVariableValue(varName);
+
+                const endLine = this.findEnd(this.currentLine, 'CASE', 'ENDCASE');
+                let executed = false;
+
+                for (let i = this.currentLine + 1; i < endLine && !executed; i++) {
+                    const caseLine = this.lines[i].text.trim();
+                    
+                    if (caseLine.match(/^OTHERWISE\s*:/i)) {
+                        if (!executed) {
+                            // Find the end of OTHERWISE block
+                            let otherwiseEnd = endLine;
+                            await this.executeBlock(i + 1, otherwiseEnd);
+                        }
+                        break;
+                    }
+                    
+                    const caseMatch = caseLine.match(/^(.+?)\s*:\s*(.*)$/);
+                    if (caseMatch) {
+                        const caseExpr = caseMatch[1].trim();
+                        const afterColon = caseMatch[2].trim();
+                        
+                        // Check if it's a range (e.g., "90 TO 100")
+                        const rangeMatch = caseExpr.match(/^(.+?)\s+TO\s+(.+)$/i);
+                        let matches = false;
+                        
+                        if (rangeMatch) {
+                            const lower = this.evaluateExpression(rangeMatch[1]);
+                            const upper = this.evaluateExpression(rangeMatch[2]);
+                            matches = (varValue >= lower && varValue <= upper);
+                        } else {
+                            const caseValue = this.evaluateExpression(caseExpr);
+                            matches = (caseValue === varValue);
+                        }
+                        
+                        if (matches && !executed) {
+                            // Execute the statement after the colon if present
+                            if (afterColon) {
+                                await this.executeLine(afterColon);
+                            }
+                            
+                            // Find the end of this case (next case or OTHERWISE or ENDCASE)
+                            let caseEnd = i + 1;
+                            while (caseEnd < endLine) {
+                                const nextLine = this.lines[caseEnd].text.trim();
+                                if (nextLine.match(/^.+\s*:/)) {
+                                    break;
+                                }
+                                caseEnd++;
+                            }
+                            
+                            // Execute the block following this case
+                            if (caseEnd > i + 1) {
+                                await this.executeBlock(i + 1, caseEnd);
+                            }
+                            
+                            executed = true;
+                            break;
+                        }
+                    }
+                }
+
+                this.currentLine = endLine;
+            }
+
+            async executeFor(line) {
+                const match = line.match(/^FOR\s+(\w+)\s*<-\s*(.+)\s+TO\s+(.+?)(\s+STEP\s+(.+))?$/i);
+                const varName = match[1];
+                const start = this.evaluateExpression(match[2]);
+                const end = this.evaluateExpression(match[3]);
+                const step = match[5] ? this.evaluateExpression(match[5]) : 1;
+
+                const nextLine = this.findNext(this.currentLine);
+                const loopStart = this.currentLine + 1;
+
+                if (step > 0) {
+                    for (let i = start; i <= end; i += step) {
+                        this.variables[varName] = i;
+                        await this.executeBlock(loopStart, nextLine);
+                    }
+                } else {
+                    for (let i = start; i >= end; i += step) {
+                        this.variables[varName] = i;
+                        await this.executeBlock(loopStart, nextLine);
+                    }
+                }
+
+                this.currentLine = nextLine;
+            }
+
+            async executeWhile(line) {
+                const match = line.match(/^WHILE\s+(.+)$/i);
+                const condition = match[1];
+
+                const endLine = this.findEnd(this.currentLine, 'WHILE', 'ENDWHILE');
+                const loopStart = this.currentLine + 1;
+
+                let iterations = 0;
+                const maxIterations = 10000;
+
+                while (this.evaluateCondition(condition)) {
+                    if (iterations++ > maxIterations) {
+                        throw new Error('Infinite loop detected');
+                    }
+                    await this.executeBlock(loopStart, endLine);
+                }
+
+                this.currentLine = endLine;
+            }
+
+            async executeRepeat() {
+                const startLine = this.currentLine;
+                const untilLine = this.findUntil(this.currentLine);
+                const loopStart = startLine + 1;
+
+                const untilText = this.lines[untilLine].text.trim();
+                const condition = untilText.match(/^UNTIL\s+(.+)$/i)[1];
+
+                let iterations = 0;
+                const maxIterations = 10000;
+
+                do {
+                    if (iterations++ > maxIterations) {
+                        throw new Error('Infinite loop detected');
+                    }
+                    await this.executeBlock(loopStart, untilLine);
+                } while (!this.evaluateCondition(condition));
+
+                this.currentLine = untilLine;
+            }
+
+            async executeBlock(start, end) {
+                const savedLine = this.currentLine;
+                for (let i = start; i < end; i++) {
+                    this.currentLine = i;
+                    const line = this.lines[i].text.trim();
+                    if (line && !line.match(/^(ENDIF|ENDWHILE|NEXT|UNTIL)/i)) {
+                        await this.executeLine(line);
+                    }
+                }
+                this.currentLine = savedLine;
+            }
+
+            evaluateExpression(expr) {
+                expr = expr.trim();
+
+                if (expr.match(/^".*"$/)) return expr.slice(1, -1);
+                if (expr.match(/^'.'$/)) return expr.slice(1, -1);
+                if (expr === 'TRUE') return true;
+                if (expr === 'FALSE') return false;
+
+                const funcMatch = expr.match(/^(\w+)\s*\(([^)]*)\)$/);
+                if (funcMatch) {
+                    return this.evaluateBuiltInFunction(funcMatch[1], funcMatch[2]);
+                }
+
+                const arrayMatch = expr.match(/^(\w+)\[(.+)\]$/);
+                if (arrayMatch) {
+                    const arrayName = arrayMatch[1];
+                    const indices = arrayMatch[2].split(',').map(idx => 
+                        this.evaluateExpression(idx.trim())
+                    );
+                    
+                    if (this.arrays[arrayName]) {
+                        if (this.arrays[arrayName].dimensions === 1) {
+                            return this.arrays[arrayName].data[indices[0]] || 
+                                   this.getDefaultValue(this.arrays[arrayName].type);
+                        } else {
+                            const key = `${indices[0]},${indices[1]}`;
+                            return this.arrays[arrayName].data[key] || 
+                                   this.getDefaultValue(this.arrays[arrayName].type);
+                        }
+                    }
+                }
+
+                let processedExpr = expr;
+                
+                processedExpr = processedExpr.replace(/\b([a-zA-Z_]\w*)\b/g, (match) => {
+                    if (this.constants.hasOwnProperty(match)) {
+                        return JSON.stringify(this.constants[match]);
+                    }
+                    if (this.variables.hasOwnProperty(match)) {
+                        return JSON.stringify(this.variables[match]);
+                    }
+                    return match;
+                });
+
+                processedExpr = processedExpr.replace(/\bMOD\b/g, '%');
+                processedExpr = processedExpr.replace(/&/g, '+');
+
+                if (expr.includes('DIV')) {
+                    const divMatch = expr.match(/(.+?)\s+DIV\s+(.+)/);
+                    if (divMatch) {
+                        const left = this.evaluateExpression(divMatch[1]);
+                        const right = this.evaluateExpression(divMatch[2]);
+                        return Math.floor(left / right);
+                    }
+                }
+
+                try {
+                    return eval(processedExpr);
+                } catch (e) {
+                    throw new Error(`Cannot evaluate: ${expr}`);
+                }
+            }
+
+            evaluateBuiltInFunction(name, argsStr) {
+                const args = argsStr ? this.splitByComma(argsStr).map(a => this.evaluateExpression(a)) : [];
+                
+                switch (name.toUpperCase()) {
+                    case 'LENGTH':
+                        return args[0].toString().length;
+                    case 'RIGHT':
+                        return args[0].toString().substring(args[0].toString().length - args[1]);
+                    case 'LEFT':
+                        return args[0].toString().substring(0, args[1]);
+                    case 'MID':
+                        return args[0].toString().substring(args[1] - 1, args[1] - 1 + args[2]);
+                    case 'LCASE':
+                        return args[0].toString().toLowerCase();
+                    case 'UCASE':
+                        return args[0].toString().toUpperCase();
+                    case 'INT':
+                        return Math.floor(args[0]);
+                    case 'RAND':
+                        return Math.random() * args[0];
+                    default:
+                        throw new Error(`Unknown function: ${name}`);
+                }
+            }
+
+            evaluateCondition(condition) {
+                condition = condition.trim();
+                condition = condition.replace(/\bAND\b/gi, '&&');
+                condition = condition.replace(/\bOR\b/gi, '||');
+                condition = condition.replace(/\bNOT\b/gi, '!');
+                condition = condition.replace(/<>/g, '!=');
+
+                condition = condition.replace(/\b([a-zA-Z_]\w*)\b/g, (match) => {
+                    if (this.constants.hasOwnProperty(match)) {
+                        return JSON.stringify(this.constants[match]);
+                    }
+                    if (this.variables.hasOwnProperty(match)) {
+                        return JSON.stringify(this.variables[match]);
+                    }
+                    return match;
+                });
+
+                condition = condition.replace(/([^<>!])=([^=])/g, '$1==$2');
+
+                try {
+                    return eval(condition);
+                } catch (e) {
+                    throw new Error(`Cannot evaluate condition: ${condition}`);
+                }
+            }
+
+            getDefaultValue(dataType) {
+                switch (dataType.toUpperCase()) {
+                    case 'INTEGER': return 0;
+                    case 'REAL': return 0.0;
+                    case 'STRING': return '';
+                    case 'CHAR': return '';
+                    case 'BOOLEAN': return false;
+                    default: return null;
+                }
+            }
+
+            splitByComma(str) {
+                const parts = [];
+                let current = '';
+                let depth = 0;
+                let inString = false;
+                let stringChar = '';
+
+                for (let char of str) {
+                    if ((char === '"' || char === "'") && !inString) {
+                        inString = true;
+                        stringChar = char;
+                        current += char;
+                    } else if (char === stringChar && inString) {
+                        inString = false;
+                        current += char;
+                    } else if (char === '(' && !inString) {
+                        depth++;
+                        current += char;
+                    } else if (char === ')' && !inString) {
+                        depth--;
+                        current += char;
+                    } else if (char === ',' && depth === 0 && !inString) {
+                        parts.push(current.trim());
+                        current = '';
+                    } else {
+                        current += char;
+                    }
+                }
+
+                if (current.trim()) {
+                    parts.push(current.trim());
+                }
+
+                return parts;
+            }
+
+            findEnd(startLine, startKeyword, endKeyword) {
+                let depth = 1;
+                for (let i = startLine + 1; i < this.lines.length; i++) {
+                    const line = this.lines[i].text.trim();
+                    if (line.match(new RegExp(`^${startKeyword}\\b`, 'i'))) depth++;
+                    if (line.match(new RegExp(`^${endKeyword}$`, 'i'))) {
+                        depth--;
+                        if (depth === 0) return i;
+                    }
+                }
+                throw new Error(`Missing ${endKeyword}`);
+            }
+
+            findNext(startLine) {
+                for (let i = startLine + 1; i < this.lines.length; i++) {
+                    if (this.lines[i].text.trim().match(/^NEXT\b/i)) return i;
+                }
+                throw new Error('Missing NEXT');
+            }
+
+            findElseOrElseIf(startLine, endLine) {
+                let depth = 1;
+                for (let i = startLine + 1; i < endLine; i++) {
+                    const line = this.lines[i].text.trim();
+                    if (line.match(/^IF\b/i)) depth++;
+                    if (line.match(/^ENDIF$/i)) depth--;
+                    if (depth === 1 && (line.match(/^ELSE$/i) || line.match(/^ELSE\s+IF\b/i))) {
+                        return i;
+                    }
+                }
+                return -1;
+            }
+
+            findUntil(startLine) {
+                for (let i = startLine + 1; i < this.lines.length; i++) {
+                    if (this.lines[i].text.trim().match(/^UNTIL\b/i)) return i;
+                }
+                throw new Error('Missing UNTIL');
+            }
+        }
+
+        function updateLineNumbers(textarea, lineNumbersDiv) {
+            const lines = textarea.value.split('\n');
+            let lineNumbersHtml = '';
+            
+            // Show sequential line numbers for ALL lines (1, 2, 3, 4...)
+            // This runs vertically down the left side
+            for (let i = 1; i <= lines.length; i++) {
+                lineNumbersHtml += i + '\n';
+            }
+            
+            lineNumbersDiv.textContent = lineNumbersHtml;
+        }
+
+        function addCell(type = 'code') {
+            const cellId = `cell-${cellCounter++}`;
+            const container = document.getElementById('cells-container');
+            
+            const cell = document.createElement('div');
+            cell.className = 'cell';
+            cell.id = cellId;
+            cell.dataset.type = type;
+            
+            if (type === 'code') {
+                cell.innerHTML = `
+                    <div class="cell-toolbar">
+                        <span class="cell-type code">Code</span>
+                        <div class="cell-actions">
+                            <button class="run-btn">▶ Run</button>
+                            <button class="delete-btn">🗑</button>
+                        </div>
+                    </div>
+                    <div class="cell-content">
+                        <div class="line-numbers" id="${cellId}-line-numbers">1</div>
+                        <div class="cell-input">
+                            <textarea class="code-input" id="${cellId}-input" placeholder="Write Cambridge pseudocode here..."></textarea>
+                        </div>
+                    </div>
+                    <div class="cell-output" id="${cellId}-output"></div>
+                `;
+            } else {
+                cell.innerHTML = `
+                    <div class="cell-toolbar">
+                        <span class="cell-type text">Text</span>
+                        <div class="cell-actions">
+                            <button class="render-btn">✓ Render</button>
+                            <button class="delete-btn">🗑</button>
+                        </div>
+                    </div>
+                    <div class="cell-content">
+                        <div class="cell-input">
+                            <textarea class="text-input" id="${cellId}-input" placeholder="Write text/notes here... Use # for headings"></textarea>
+                        </div>
+                    </div>
+                    <div class="text-rendered" id="${cellId}-rendered"></div>
+                `;
+            }
+            
+            container.appendChild(cell);
+            
+            const textarea = document.getElementById(`${cellId}-input`);
+            
+            // Add event listeners for toolbar buttons
+            const runBtn = cell.querySelector('.run-btn');
+            const renderBtn = cell.querySelector('.render-btn');
+            const deleteBtn = cell.querySelector('.delete-btn');
+            
+            if (runBtn) {
+                runBtn.addEventListener('click', () => runCell(cellId));
+            }
+            
+            if (renderBtn) {
+                renderBtn.addEventListener('click', () => renderText(cellId));
+            }
+            
+            if (deleteBtn) {
+                deleteBtn.addEventListener('click', () => deleteCell(cellId));
+            }
+            
+            if (type === 'code') {
+                const lineNumbers = document.getElementById(`${cellId}-line-numbers`);
+                
+                // Only update line numbers on Enter key press
+                textarea.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') {
+                        // Update after the Enter is processed
+                        setTimeout(() => {
+                            updateLineNumbers(textarea, lineNumbers);
+                        }, 0);
+                    }
+                });
+                
+                // Sync scrolling
+                textarea.addEventListener('scroll', () => {
+                    lineNumbers.scrollTop = textarea.scrollTop;
+                });
+                
+                // Initialize line numbers
+                updateLineNumbers(textarea, lineNumbers);
+            }
+            
+            // Keyboard shortcuts
+            textarea.addEventListener('keydown', async (e) => {
+                // Handle auto-indentation for Enter key in code cells
+                if (type === 'code' && e.key === 'Enter' && !e.shiftKey && !e.ctrlKey) {
+                    if (handleAutoIndent(textarea, e)) {
+                        return;
+                    }
+                }
+                
+                if (e.key === 'Enter' && e.shiftKey) {
+                    e.preventDefault();
+                    if (type === 'code') {
+                        await runCell(cellId);
+                    } else {
+                        renderText(cellId);
+                    }
+                } else if (e.key === 'Enter' && e.ctrlKey) {
+                    e.preventDefault();
+                    if (type === 'code') {
+                        await runCell(cellId, false);
+                    }
+                }
+            });
+            
+            textarea.addEventListener('focus', () => {
+                cell.classList.add('focused');
+            });
+            
+            textarea.addEventListener('blur', () => {
+                cell.classList.remove('focused');
+            });
+            
+            textarea.focus();
+        }
+
+        async function runCell(cellId, moveToNext = true) {
+            const cell = document.getElementById(cellId);
+            const textarea = document.getElementById(`${cellId}-input`);
+            const outputDiv = document.getElementById(`${cellId}-output`);
+            
+            const code = textarea.value;
+            
+            if (!code.trim()) {
+                return;
+            }
+            
+            outputDiv.innerHTML = '<span class="info">Running...</span>';
+            outputDiv.classList.add('visible');
+            
+            try {
+                const globalContext = {
+                    variables: globalVariables,
+                    constants: globalConstants,
+                    arrays: globalArrays
+                };
+                
+                const interpreter = new CambridgePseudocodeInterpreter(globalContext);
+                const results = await interpreter.run(code);
+                
+                if (results.length === 0) {
+                    outputDiv.innerHTML = '<span style="color: #999;">Executed (no output)</span>';
+                } else {
+                    outputDiv.innerHTML = results.map(r => {
+                        const className = r.type === 'error' ? 'error' : r.type === 'info' ? 'info' : 'success';
+                        return `<div class="output-line ${className}">${escapeHtml(String(r.message))}</div>`;
+                    }).join('');
+                }
+            } catch (error) {
+                outputDiv.innerHTML = `<span class="error">Error: ${escapeHtml(error.message)}</span>`;
+            }
+        }
+
+        function renderText(cellId) {
+            const textarea = document.getElementById(`${cellId}-input`);
+            const renderedDiv = document.getElementById(`${cellId}-rendered`);
+            
+            const text = textarea.value;
+            
+            if (!text.trim()) {
+                renderedDiv.classList.remove('visible');
+                return;
+            }
+            
+            // Simple markdown-like rendering
+            let html = text
+                .split('\n')
+                .map(line => {
+                    if (line.startsWith('### ')) {
+                        return `<h3>${escapeHtml(line.substring(4))}</h3>`;
+                    } else if (line.startsWith('## ')) {
+                        return `<h2>${escapeHtml(line.substring(3))}</h2>`;
+                    } else if (line.startsWith('# ')) {
+                        return `<h1>${escapeHtml(line.substring(2))}</h1>`;
+                    } else if (line.match(/`[^`]+`/)) {
+                        return `<p>${line.replace(/`([^`]+)`/g, '<code>$1</code>')}</p>`;
+                    } else if (line.trim()) {
+                        return `<p>${escapeHtml(line)}</p>`;
+                    }
+                    return '';
+                })
+                .join('');
+            
+            renderedDiv.innerHTML = html;
+            renderedDiv.classList.add('visible');
+        }
+
+        function deleteCell(cellId) {
+            const cell = document.getElementById(cellId);
+            if (!cell) {
+                alert('Error: Cell not found');
+                return;
+            }
+            // Delete immediately - no confirmation needed
+            cell.remove();
+        }
+
+        async function runAllCells() {
+            const cells = document.querySelectorAll('.cell[data-type="code"]');
+            for (let cell of cells) {
+                await runCell(cell.id, false);
+            }
+        }
+
+        function clearAllOutputs() {
+            const outputs = document.querySelectorAll('.cell-output');
+            outputs.forEach(output => {
+                output.innerHTML = '';
+                output.classList.remove('visible');
+            });
+            
+            // Clear global variables
+            Object.keys(globalVariables).forEach(key => delete globalVariables[key]);
+            Object.keys(globalArrays).forEach(key => delete globalArrays[key]);
+            Object.keys(globalConstants).forEach(key => delete globalConstants[key]);
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Auto-indentation logic
+        function handleAutoIndent(textarea, event) {
+            if (event.key === 'Enter') {
+                const cursorPos = textarea.selectionStart;
+                const textBeforeCursor = textarea.value.substring(0, cursorPos);
+                const lines = textBeforeCursor.split('\n');
+                const currentLine = lines[lines.length - 1];
+                const trimmedLine = currentLine.trim();
+                
+                // Get current indentation
+                const currentIndent = currentLine.match(/^\s*/)[0];
+                
+                // Keywords that increase indentation
+                const increaseIndentKeywords = /^(IF\s+.*THEN|ELSE\s+IF\s+.*THEN|ELSE|FOR\s+.*TO|WHILE\s+|REPEAT|PROCEDURE\s+|FUNCTION\s+|CASE\s+OF)/i;
+                
+                // Keywords that decrease indentation (and also increase for next line)
+                const decreaseAndIncreaseKeywords = /^(ELSE\s+IF\s+.*THEN|ELSE)/i;
+                
+                // Keywords that only decrease indentation
+                const decreaseIndentKeywords = /^(ENDIF|ENDWHILE|UNTIL\s+|NEXT\s+|ENDPROCEDURE|ENDFUNCTION|ENDCASE)/i;
+                
+                // CASE labels that should match CASE OF indentation
+                const caseLabelKeywords = /^(.+\s*:|OTHERWISE\s*:)/i;
+                
+                let newIndent = currentIndent;
+                
+                // Handle ELSE and ELSE IF - they should be at the same level as IF
+                if (decreaseAndIncreaseKeywords.test(trimmedLine) && currentIndent.length >= 3) {
+                    // First, dedent the current line
+                    const newCurrentLine = currentLine.substring(3);
+                    const beforeCurrentLine = lines.slice(0, -1).join('\n');
+                    const afterCursor = textarea.value.substring(cursorPos);
+                    
+                    textarea.value = (beforeCurrentLine ? beforeCurrentLine + '\n' : '') + newCurrentLine + afterCursor;
+                    
+                    const adjustment = -3;
+                    const newCursorPos = cursorPos + adjustment;
+                    
+                    // Now set indent for next line (after ELSE/ELSE IF THEN)
+                    newIndent = newCurrentLine.match(/^\s*/)[0] + '   ';
+                    
+                    // Insert new line with indentation
+                    event.preventDefault();
+                    const textAfterNewCursor = textarea.value.substring(newCursorPos);
+                    const newText = textarea.value.substring(0, newCursorPos) + '\n' + newIndent + textAfterNewCursor;
+                    textarea.value = newText;
+                    
+                    const finalCursorPos = newCursorPos + 1 + newIndent.length;
+                    textarea.selectionStart = finalCursorPos;
+                    textarea.selectionEnd = finalCursorPos;
+                    
+                    const cell = textarea.closest('.cell');
+                    if (cell && cell.dataset.type === 'code') {
+                        const lineNumbers = cell.querySelector('.line-numbers');
+                        updateLineNumbers(textarea, lineNumbers);
+                    }
+                    
+                    return true;
+                }
+                
+                // Check if current line should cause next line to indent
+                if (increaseIndentKeywords.test(trimmedLine)) {
+                    newIndent = currentIndent + '   '; // 3 spaces
+                }
+                
+                // Check if current line should decrease its own indentation
+                if (decreaseIndentKeywords.test(trimmedLine) && currentIndent.length >= 3) {
+                    const newCurrentLine = currentLine.substring(3);
+                    const beforeCurrentLine = lines.slice(0, -1).join('\n');
+                    const afterCursor = textarea.value.substring(cursorPos);
+                    
+                    textarea.value = (beforeCurrentLine ? beforeCurrentLine + '\n' : '') + newCurrentLine + afterCursor;
+                    
+                    const newCursorPos = cursorPos - 3;
+                    textarea.selectionStart = newCursorPos;
+                    textarea.selectionEnd = newCursorPos;
+                    
+                    newIndent = newCurrentLine.match(/^\s*/)[0];
+                }
+                
+                // Insert new line with indentation
+                event.preventDefault();
+                const textAfterCursor = textarea.value.substring(cursorPos);
+                const newText = textarea.value.substring(0, cursorPos) + '\n' + newIndent + textAfterCursor;
+                textarea.value = newText;
+                
+                // Set cursor position after the new indentation
+                const newCursorPos = cursorPos + 1 + newIndent.length;
+                textarea.selectionStart = newCursorPos;
+                textarea.selectionEnd = newCursorPos;
+                
+                // Update line numbers
+                const cell = textarea.closest('.cell');
+                if (cell && cell.dataset.type === 'code') {
+                    const lineNumbers = cell.querySelector('.line-numbers');
+                    updateLineNumbers(textarea, lineNumbers);
+                }
+                
+                return true;
+            }
+            return false;
+        }
+
+        function loadExample() {
+            clearAllOutputs();
+            document.getElementById('cells-container').innerHTML = '';
+            
+            // Add text cell
+            addCell('text');
+            const textCell = document.querySelector('.cell[data-type="text"]:last-child');
+            const textInput = textCell.querySelector('textarea');
+            textInput.value = `# Cambridge Pseudocode Examples (0478/2210/9618)
+
+This notebook demonstrates key programming constructs with PascalCase naming and <- assignment.
+
+**Features demonstrated:**
+- IF-THEN-ELSE IF statements
+- CASE OF statements with ranges
+- 1D and 2D arrays
+- Auto-indentation`;
+            renderText(textCell.id);
+            
+            // Add code cell 1 - Basic variables
+            addCell('code');
+            let codeCell = document.querySelector('.cell[data-type="code"]:last-child');
+            let codeInput = codeCell.querySelector('textarea');
+            codeInput.value = `// Initialize variables
+DECLARE StudentName : STRING
+DECLARE Score : INTEGER
+
+StudentName <- "Alice"
+Score <- 85
+
+OUTPUT "Student: ", StudentName
+OUTPUT "Score: ", Score`;
+            updateLineNumbers(codeInput, codeCell.querySelector('.line-numbers'));
+            
+            // Add text cell
+            addCell('text');
+            const textCell2 = document.querySelector('.cell[data-type="text"]:last-child');
+            const textInput2 = textCell2.querySelector('textarea');
+            textInput2.value = `## IF-THEN-ELSE IF Statements
+
+Using ELSE IF for multiple conditions. Try auto-indent by pressing Enter after THEN!`;
+            renderText(textCell2.id);
+            
+            // Add code cell 2 - IF ELSE IF
+            addCell('code');
+            codeCell = document.querySelector('.cell[data-type="code"]:last-child');
+            codeInput = codeCell.querySelector('textarea');
+            codeInput.value = `// Grade classification with ELSE IF
+DECLARE Grade : CHAR
+
+IF Score >= 90 THEN
+   Grade <- 'A'
+   OUTPUT "Excellent! Grade: A"
+ELSE IF Score >= 80 THEN
+   Grade <- 'B'
+   OUTPUT "Very Good! Grade: B"
+ELSE IF Score >= 70 THEN
+   Grade <- 'C'
+   OUTPUT "Good! Grade: C"
+ELSE IF Score >= 60 THEN
+   Grade <- 'D'
+   OUTPUT "Pass. Grade: D"
+ELSE
+   Grade <- 'F'
+   OUTPUT "Fail. Grade: F"
+ENDIF
+
+OUTPUT "Final Grade: ", Grade`;
+            updateLineNumbers(codeInput, codeCell.querySelector('.line-numbers'));
+            
+            // Add text cell
+            addCell('text');
+            const textCell3 = document.querySelector('.cell[data-type="text"]:last-child');
+            const textInput3 = textCell3.querySelector('textarea');
+            textInput3.value = `## CASE OF Statements
+
+Using CASE with ranges for cleaner code.`;
+            renderText(textCell3.id);
+            
+            // Add code cell 3 - CASE
+            addCell('code');
+            codeCell = document.querySelector('.cell[data-type="code"]:last-child');
+            codeInput = codeCell.querySelector('textarea');
+            codeInput.value = `// Grade classification using CASE
+DECLARE Mark : INTEGER
+DECLARE LetterGrade : CHAR
+
+Mark <- 75
+
+CASE OF Mark
+   90 TO 100 : LetterGrade <- 'A'
+   80 TO 89  : LetterGrade <- 'B'
+   70 TO 79  : LetterGrade <- 'C'
+   60 TO 69  : LetterGrade <- 'D'
+   OTHERWISE : LetterGrade <- 'F'
+ENDCASE
+
+OUTPUT "Mark: ", Mark, " = Grade: ", LetterGrade`;
+            updateLineNumbers(codeInput, codeCell.querySelector('.line-numbers'));
+            
+            // Add text cell
+            addCell('text');
+            const textCell4 = document.querySelector('.cell[data-type="text"]:last-child');
+            const textInput4 = textCell4.querySelector('textarea');
+            textInput4.value = `## 1D Arrays
+
+One-dimensional arrays for lists of data.`;
+            renderText(textCell4.id);
+            
+            // Add code cell 4 - 1D Array
+            addCell('code');
+            codeCell = document.querySelector('.cell[data-type="code"]:last-child');
+            codeInput = codeCell.querySelector('textarea');
+            codeInput.value = `// 1D Array example
+DECLARE Scores : ARRAY[1:5] OF INTEGER
+DECLARE Total : INTEGER
+DECLARE Average : REAL
+DECLARE Index : INTEGER
+
+Total <- 0
+
+// Initialize array with scores
+FOR Index <- 1 TO 5
+   Scores[Index] <- Index * 15
+   Total <- Total + Scores[Index]
+NEXT Index
+
+Average <- Total / 5
+
+OUTPUT "Scores: "
+FOR Index <- 1 TO 5
+   OUTPUT "Score[", Index, "] = ", Scores[Index]
+NEXT Index
+
+OUTPUT "Total: ", Total
+OUTPUT "Average: ", Average`;
+            updateLineNumbers(codeInput, codeCell.querySelector('.line-numbers'));
+            
+            // Add text cell
+            addCell('text');
+            const textCell5 = document.querySelector('.cell[data-type="text"]:last-child');
+            const textInput5 = textCell5.querySelector('textarea');
+            textInput5.value = `## 2D Arrays
+
+Two-dimensional arrays for tables and grids.`;
+            renderText(textCell5.id);
+            
+            // Add code cell 5 - 2D Array
+            addCell('code');
+            codeCell = document.querySelector('.cell[data-type="code"]:last-child');
+            codeInput = codeCell.querySelector('textarea');
+            codeInput.value = `// 2D Array example - Student grades table
+DECLARE StudentGrades : ARRAY[1:3, 1:4] OF INTEGER
+DECLARE Row : INTEGER
+DECLARE Col : INTEGER
+DECLARE StudentTotal : INTEGER
+
+// Initialize 2D array (3 students, 4 subjects)
+FOR Row <- 1 TO 3
+   FOR Col <- 1 TO 4
+      StudentGrades[Row, Col] <- (Row * 10) + (Col * 5)
+   NEXT Col
+NEXT Row
+
+// Display the table
+OUTPUT "Student Grades Table:"
+OUTPUT "--------------------"
+
+FOR Row <- 1 TO 3
+   StudentTotal <- 0
+   OUTPUT "Student ", Row, ": "
+   
+   FOR Col <- 1 TO 4
+      OUTPUT "  Subject ", Col, " = ", StudentGrades[Row, Col]
+      StudentTotal <- StudentTotal + StudentGrades[Row, Col]
+   NEXT Col
+   
+   OUTPUT "  Total = ", StudentTotal
+   OUTPUT ""
+NEXT Row`;
+            updateLineNumbers(codeInput, codeCell.querySelector('.line-numbers'));
+            
+            // Add text cell
+            addCell('text');
+            const textCell6 = document.querySelector('.cell[data-type="text"]:last-child');
+            const textInput6 = textCell6.querySelector('textarea');
+            textInput6.value = `## Try It Yourself!
+
+Add a new code cell and try:
+- Writing your own IF-ELSE IF chains
+- Creating CASE statements with different ranges
+- Working with arrays
+- Using the auto-indent feature (just press Enter!)`;
+            renderText(textCell6.id);
+        }
+
+        // Initialize with one code cell
+        addCell('code');
+    </script>
+</body>
+</html>
