@@ -41,7 +41,7 @@ This tool bridges that gap by allowing students to:
 DECLARE count : INTEGER
 count ← 1
 
-WHILE count <= 5
+WHILE count <= 5 DO
     OUTPUT count
     count ← count + 1
 ENDWHILE
